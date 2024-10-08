@@ -38,18 +38,32 @@ const MapComponent = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
+      
+      {/* Start point marker */}
       <Marker position={StartCoordinates} icon={markerIcon}>
         <Popup>Start Point</Popup>
       </Marker>
+
+      {/* Current location marker */}
       <Marker position={CurrentCoordinates} icon={markerIcon}>
         <Popup>Current Location</Popup>
       </Marker>
+
+      {/* Destination marker */}
       <Marker position={EndCoordinates} icon={markerIcon}>
         <Popup>Destination</Popup>
       </Marker>
-      {/* Render two polylines to ensure the curve follows through the current point */}
-      <Polyline positions={firstCurvePoints} color="blue" />
-      <Polyline positions={secondCurvePoints} color="blue" />
+
+      {/* Bold line from Start to Current Location */}
+      <Polyline positions={firstCurvePoints} color="blue" weight={5} /> {/* weight prop increases the thickness */}
+      
+      {/* Dotted line from Current Location to End */}
+      <Polyline 
+        positions={secondCurvePoints} 
+        color="blue" 
+        weight={3} 
+        dashArray="5, 10" // Dotted line style
+      />
     </MapContainer>
   );
 };
