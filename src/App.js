@@ -38,41 +38,47 @@ const generateCurve = (start, end, control, numPoints = 50) => {
 };
 
 function generateCoordinates(Arr) {
+  console.log(Arr, "arrayy");
   const curves = [];
-  let last = [];
+  let last = null; // Store the last point of the previous curve
+
   for (let i = 0; i < Arr.length - 1; i += 2) {
-    const start = Arr[i];
-    const control = Arr[i + 1] || start;  // If no control point, use start
-    const end = Arr[i + 2] || control;    // If no end point, use control
+    const start = last || Arr[i];
+    const end = Arr[i + 2] || Arr[Arr.length - 1];
+    const control = Arr[i + 1];
 
-    // Generate the curve with available points
     const curvePoints = generateCurve(start, end, control);
-    curves.push(curvePoints);
-    last = curvePoints.slice(-1);
-
-    // If we are at the end and have one leftover point, connect it to the last point
-    if (i + 2 >= Arr.length) {
-      curves.push([...last, end, Arr[Arr.length - 1]]);  // Ensure the last point connects
+    last = curvePoints[curvePoints.length - 1];
+    if(Arr.length === 3)
+    {
+      curvePoints.push(end);
     }
+    curves.push(curvePoints);
   }
+
   return curves;
 }
 
 
 
-const App = ({ currentLoc = InitialCurrentCoordinates }) => {
+
+
+const App = ({ currentLoc = InitialCurrentCoordinates, index = 5 }) => {
   const [currentCoordinates, setCurrentCoordinates] = useState(currentLoc);
   const [leftCordinates, setLeftCordinates] = useState([]);
   const [rightCordinates, setRightCordinates] = useState([]);
+  const [trackCoordinates, setTrackCoordinates] = useState([currentCoordinates]);
   const shipRouteCoordinates = [
     StartCoordinates,
-    [-27.204054, 47.080745],
+    [-2.273964, 65.597540],
+    [-26.517021, 49.477049],
     [-36.694415, 25.283397],
-    currentCoordinates,
-    [-6.784086, -30.615036],
+    ...trackCoordinates,
     EndCoordinates,
   ];
-
+  if(index !==5)
+  {
+  }
   // Function to calculate route from Start to Current Location
   const ShipSpecifiedRouteStartToCurrentLoc = () => {
     const startIndex = shipRouteCoordinates.findIndex(coord => 
@@ -99,22 +105,24 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
 
   const routeToCurrent = ShipSpecifiedRouteStartToCurrentLoc();
   const routeToDestination = ShipSpecifiedRouteCurrentLocToDestination();
-  setLeftCordinates(generateCoordinates(routeToCurrent));
-  setRightCordinates(generateCoordinates(routeToDestination));
+  const left = generateCoordinates(routeToCurrent);
+  const right = generateCoordinates(routeToDestination);
+  setLeftCordinates(left);
+  setRightCordinates(right);
 
 }
 
   const calculateDistance = useMemo(() => {
     let coords1 = currentCoordinates;
     let coords2 = EndCoordinates;
-    const R = 6371; // Radius of the Earth in kilometers
-    const lat1 = coords1[0] * (Math.PI / 180); // Convert latitude from degrees to radians
-    const lon1 = coords1[1] * (Math.PI / 180); // Convert longitude from degrees to radians
+    const R = 6371;
+    const lat1 = coords1[0] * (Math.PI / 180);
+    const lon1 = coords1[1] * (Math.PI / 180);
     const lat2 = coords2[0] * (Math.PI / 180);
     const lon2 = coords2[1] * (Math.PI / 180);
   
-    const dLat = lat2 - lat1; // Difference in latitude
-    const dLon = lon2 - lon1; // Difference in longitude
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
   
     const a = Math.sin(dLat / 2) ** 2 +
               Math.cos(lat1) * Math.cos(lat2) *
@@ -127,15 +135,17 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
     return distance;
   }, [currentCoordinates]);
 
-  // Effect to update current coordinates
+  useEffect(()=>{
+    generateCurveByCoordinates();
+  }, [currentCoordinates])
   useEffect(() => {
     setCurrentCoordinates(currentLoc);
-    generateCurveByCoordinates();
+    setTrackCoordinates((prev)=>[...prev, currentLoc])
   }, [currentLoc]);
 
   return (
     <MapContainer center={currentCoordinates} zoom={1} style={{ height: '500px', width: '100%' }}>
-      <div className="estimated-distance"><h4 style={{fontWeight:"bold"}}>Estimated Distance : {calculateDistance.toFixed(2)}</h4></div>
+      <div className="estimated-distance"><h4 style={{fontWeight:"bold"}}> Estimated Distance : {calculateDistance.toFixed(2)}</h4></div>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
        />
@@ -156,13 +166,16 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
       </Marker>
 
       {/* Thick line from Start to Current Location */}
-      {leftCordinates.map((item)=>(
-        <Polyline positions={item} color="blue" weight={5} />
+      {leftCordinates.map((item, index)=>(
+        <Polyline key={index} positions={item} color="blue" weight={5} />
       ))}
 
       {/* Dotted line from Current Location to Destination */}
-      {rightCordinates.map((item)=>(
-        <Polyline positions={item} color="blue" weight={3} dashArray="5, 10" />
+      {rightCordinates.map((item, index)=>(
+         <>
+        {console.log(item)}
+        <Polyline key={index} positions={item} color="blue" weight={3} dashArray="5, 10" />
+        </>
       ))}
       <Circle 
         center={currentCoordinates} 
