@@ -27,8 +27,43 @@ const destinationIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
+const generateCurve = (start, end, control, numPoints = 50) => {
+  const points = [];
+  for (let t = 0; t <= 1; t += 1 / numPoints) {
+    const x = (1 - t) ** 2 * start[1] + 2 * (1 - t) * t * control[1] + t ** 2 * end[1]; // longitude
+    const y = (1 - t) ** 2 * start[0] + 2 * (1 - t) * t * control[0] + t ** 2 * end[0]; // latitude
+    points.push([y, x]); // Leaflet uses [latitude, longitude]
+  }
+  return points;
+};
+
+function generateCoordinates(Arr) {
+  const curves = [];
+  let last = [];
+  for (let i = 0; i < Arr.length - 1; i += 2) {
+    const start = Arr[i];
+    const control = Arr[i + 1] || start;  // If no control point, use start
+    const end = Arr[i + 2] || control;    // If no end point, use control
+
+    // Generate the curve with available points
+    const curvePoints = generateCurve(start, end, control);
+    curves.push(curvePoints);
+    last = curvePoints.slice(-1);
+
+    // If we are at the end and have one leftover point, connect it to the last point
+    if (i + 2 >= Arr.length) {
+      curves.push([...last, end, Arr[Arr.length - 1]]);  // Ensure the last point connects
+    }
+  }
+  return curves;
+}
+
+
+
 const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   const [currentCoordinates, setCurrentCoordinates] = useState(currentLoc);
+  const [leftCordinates, setLeftCordinates] = useState([]);
+  const [rightCordinates, setRightCordinates] = useState([]);
   const shipRouteCoordinates = [
     StartCoordinates,
     [-27.204054, 47.080745],
@@ -60,10 +95,14 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
     return shipRouteCoordinates.slice(currentIndex, endIndex + 1);
   };
 
+  const generateCurveByCoordinates = () => {
+
   const routeToCurrent = ShipSpecifiedRouteStartToCurrentLoc();
   const routeToDestination = ShipSpecifiedRouteCurrentLocToDestination();
+  setLeftCordinates(generateCoordinates(routeToCurrent));
+  setRightCordinates(generateCoordinates(routeToDestination));
 
- 
+}
 
   const calculateDistance = useMemo(() => {
     let coords1 = currentCoordinates;
@@ -91,6 +130,7 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   // Effect to update current coordinates
   useEffect(() => {
     setCurrentCoordinates(currentLoc);
+    generateCurveByCoordinates();
   }, [currentLoc]);
 
   return (
@@ -116,10 +156,14 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
       </Marker>
 
       {/* Thick line from Start to Current Location */}
-      <Polyline positions={routeToCurrent} color="blue" weight={5} />
+      {leftCordinates.map((item)=>(
+        <Polyline positions={item} color="blue" weight={5} />
+      ))}
 
       {/* Dotted line from Current Location to Destination */}
-      <Polyline positions={routeToDestination} color="blue" weight={3} dashArray="5, 10" />
+      {rightCordinates.map((item)=>(
+        <Polyline positions={item} color="blue" weight={3} dashArray="5, 10" />
+      ))}
       <Circle 
         center={currentCoordinates} 
         radius={100000}
