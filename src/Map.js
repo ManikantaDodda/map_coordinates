@@ -3,13 +3,23 @@ import App from './App';
 function Map() {
     const [currentCordinate, setCurrentCordinates] = useState([-36.802237, 12.913736]);
     const [value, setValue] = useState();
+
+    function isValidNumber(value) {
+        return typeof parseFloat(value) === 'number' && !isNaN(value);
+    }
     const handleSubmit = () => {
         if(value)
         {
             let arr = value.split(',');
             if(arr.length === 2)
             {
+               if(isValidNumber(arr[0]) && isValidNumber(arr[1]))
+               {
                setCurrentCordinates(arr);
+               }
+               else{
+                alert("It must be valid Numbers ")
+            }
             }
             else{
                 alert("It must be comma separated two coordinates such as 23, -22 ")

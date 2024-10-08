@@ -15,5 +15,14 @@ code {
 .input-box {
   padding: 10px;
   margin: 10px;
-  
+}
+.estimated-distance{
+  position: absolute;
+  margin-left: 400px;
+  z-index: 999
+}
+@media screen and (max-width: 480px) {
+  .estimated-distance {
+    margin-left: 200px;
+  }
 }

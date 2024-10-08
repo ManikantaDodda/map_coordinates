@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -10,7 +10,7 @@ const StartCoordinates = [19.0760, 72.8777];
 const EndCoordinates = [40.7128, -74.0060];
 const InitialCurrentCoordinates = [-36.802237, 12.913736];
 
-// Customize marker icons (optional)
+// Customize marker icons 
 const markerIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   iconSize: [25, 41],
@@ -29,7 +29,6 @@ const destinationIcon = new L.Icon({
 
 const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   const [currentCoordinates, setCurrentCoordinates] = useState(currentLoc);
-
   const shipRouteCoordinates = [
     StartCoordinates,
     [-27.204054, 47.080745],
@@ -64,17 +63,42 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   const routeToCurrent = ShipSpecifiedRouteStartToCurrentLoc();
   const routeToDestination = ShipSpecifiedRouteCurrentLocToDestination();
 
+ 
+
+  const calculateDistance = useMemo(() => {
+    let coords1 = currentCoordinates;
+    let coords2 = EndCoordinates;
+    const R = 6371; // Radius of the Earth in kilometers
+    const lat1 = coords1[0] * (Math.PI / 180); // Convert latitude from degrees to radians
+    const lon1 = coords1[1] * (Math.PI / 180); // Convert longitude from degrees to radians
+    const lat2 = coords2[0] * (Math.PI / 180);
+    const lon2 = coords2[1] * (Math.PI / 180);
+  
+    const dLat = lat2 - lat1; // Difference in latitude
+    const dLon = lon2 - lon1; // Difference in longitude
+  
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(dLon / 2) ** 2;
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    const distance = R * c; // Distance in kilometers
+  console.log("cd", distance);
+    return distance;
+  }, [currentCoordinates]);
+
   // Effect to update current coordinates
   useEffect(() => {
     setCurrentCoordinates(currentLoc);
   }, [currentLoc]);
 
   return (
-    <MapContainer center={currentCoordinates} zoom={2} style={{ height: '500px', width: '100%' }}>
+    <MapContainer center={currentCoordinates} zoom={1} style={{ height: '500px', width: '100%' }}>
+      <div className="estimated-distance"><h4 style={{fontWeight:"bold"}}>Estimated Distance : {calculateDistance.toFixed(2)}</h4></div>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+       />
 
       {/* Start point marker */}
       <Marker position={StartCoordinates} icon={markerIcon}>
@@ -107,4 +131,4 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   );
 };
 
-export default App;
+export default React.memo(App);
