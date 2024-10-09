@@ -38,7 +38,6 @@ const generateCurve = (start, end, control, numPoints = 50) => {
 };
 
 function generateCoordinates(Arr) {
-  console.log(Arr, "arrayy");
   const curves = [];
   let last = null; // Store the last point of the previous curve
 
@@ -63,7 +62,7 @@ function generateCoordinates(Arr) {
 
 
 
-const App = ({ currentLoc = InitialCurrentCoordinates, index = 5 }) => {
+const App = ({ currentLoc = InitialCurrentCoordinates }) => {
   const [currentCoordinates, setCurrentCoordinates] = useState(currentLoc);
   const [leftCordinates, setLeftCordinates] = useState([]);
   const [rightCordinates, setRightCordinates] = useState([]);
@@ -76,9 +75,6 @@ const App = ({ currentLoc = InitialCurrentCoordinates, index = 5 }) => {
     ...trackCoordinates,
     EndCoordinates,
   ];
-  if(index !==5)
-  {
-  }
   // Function to calculate route from Start to Current Location
   const ShipSpecifiedRouteStartToCurrentLoc = () => {
     const startIndex = shipRouteCoordinates.findIndex(coord => 
@@ -131,7 +127,6 @@ const App = ({ currentLoc = InitialCurrentCoordinates, index = 5 }) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   
     const distance = R * c; // Distance in kilometers
-  console.log("cd", distance);
     return distance;
   }, [currentCoordinates]);
 
@@ -172,14 +167,11 @@ const App = ({ currentLoc = InitialCurrentCoordinates, index = 5 }) => {
 
       {/* Dotted line from Current Location to Destination */}
       {rightCordinates.map((item, index)=>(
-         <>
-        {console.log(item)}
         <Polyline key={index} positions={item} color="blue" weight={3} dashArray="5, 10" />
-        </>
       ))}
       <Circle 
         center={currentCoordinates} 
-        radius={100000}
+        radius={100}
         color="red" 
         fillColor="red" 
         fillOpacity={0.3} 
