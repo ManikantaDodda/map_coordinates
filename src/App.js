@@ -71,6 +71,7 @@ const App = ({ currentLoc = InitialCurrentCoordinates }) => {
     StartCoordinates,
     [-2.273964, 65.597540],
     [-26.517021, 49.477049],
+    [-31.517021, 33.477049],
     [-36.694415, 25.283397],
     ...trackCoordinates,
     EndCoordinates,

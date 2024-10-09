@@ -9,7 +9,7 @@ function Map() {
 
   const EndCoordinates = [40.7128, -74.0060];
   const middleCordinates = [-6.784086, -30.615036];
-  const InitialCurrentCoordinates = [-36.802237, 12.913736];
+  const InitialCurrentCoordinates = currentCordinate;
 
   // Function to interpolate coordinates
   const interpolate = (start, end, t) => {
@@ -25,28 +25,39 @@ function Map() {
   useEffect(() => {
     if (isMove) {
       let t = 0;
-
+  
       const interval = setInterval(() => {
-        if (t < 1) {
-          const newCoordinates = isMovingToEnd
-            ? interpolate(middleCordinates, EndCoordinates, t) // Middle to End
-            : interpolate(InitialCurrentCoordinates, middleCordinates, t); // Initial to Middle
-
-          setCurrentCordinates(newCoordinates);
-          t += 0.01;
-        } else {
-          if (!isMovingToEnd) {
-            setIsMovingToEnd(true);
-            t = 0;
-          } else {
-            clearInterval(interval);
-          }
+        const newCoordinates = isMovingToEnd
+          ? interpolate(middleCordinates, EndCoordinates, t) // Middle to End
+          : interpolate(InitialCurrentCoordinates, middleCordinates, t); // Initial to Middle
+  
+        setCurrentCordinates(newCoordinates);
+        t += 0.01;
+  
+        if (isMovingToEnd && hasReached(newCoordinates, EndCoordinates)) {
+          clearInterval(interval);
+          alert("Ship Reached to Destination");
+          return;
         }
+  
+        if (!isMovingToEnd && hasReached(newCoordinates, middleCordinates)) {
+          setIsMovingToEnd(true);
+          t = 0; 
+        }
+  
       }, 300);
-
+  
       return () => clearInterval(interval);
     }
   }, [isMove, isMovingToEnd]);
+  
+  const hasReached = (current, target, margin = 0.0001) => {
+    const [lat1, lng1] = current;
+    const [lat2, lng2] = target;
+  
+    return Math.abs(lat1 - lat2) < margin && Math.abs(lng1 - lng2) < margin;
+  };
+  
 
   // Validation for the user-inputted coordinates
   function isValidNumber(value) {
@@ -59,7 +70,7 @@ function Map() {
       let arr = value.split(',');
       if (arr.length === 2) {
         if (isValidNumber(arr[0]) && isValidNumber(arr[1])) {
-          setCurrentCordinates(arr);
+          setCurrentCordinates(arr.map(Number));
         } else {
           alert('It must be valid numbers');
         }
